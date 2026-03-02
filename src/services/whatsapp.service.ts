@@ -28,7 +28,7 @@ export class WhatsAppService {
   private createClient(): Client {
     log.bot("creating new WhatsApp client...");
     return new Client({
-      authStrategy: new LocalAuth(),
+      authStrategy: new LocalAuth({ dataPath: '/app/data' }),
       puppeteer: {
         headless: true,
         executablePath: "/usr/bin/chromium",
