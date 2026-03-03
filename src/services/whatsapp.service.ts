@@ -28,10 +28,11 @@ export class WhatsAppService {
   private createClient(): Client {
     log.bot("creating new WhatsApp client...");
     return new Client({
-      authStrategy: new LocalAuth({ dataPath: '/app/data' }),
+      // authStrategy: new LocalAuth({ dataPath: '/app/data' }),
+      authStrategy: new LocalAuth(),
       puppeteer: {
         headless: true,
-        executablePath: "/usr/bin/chromium",
+        // executablePath: "/usr/bin/chromium",
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
