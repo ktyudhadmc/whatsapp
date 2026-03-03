@@ -679,7 +679,7 @@ export class WhatsAppBotService {
           );
         } catch (err) {
           log.error(`info group failed | id: ${groupId} | error:`, err);
-          await message.reply(`Gagal ambil info group: ${groupId}`);
+          await message.reply(`❌ Gagal ambil info group: ${groupId}`);
         }
         return;
       }
@@ -689,28 +689,75 @@ export class WhatsAppBotService {
         let contact: any;
 
         if (target) {
-          const chatId = `${target.replace(/\D/g, "")}@c.us`;
-          contact = await whatsappService.getContactById(chatId);
+          const number = target.replace(/\D/g, "");
+          const chatId = `${number}@c.us`;
+
+          log.bot(`info: resolving contact | chatId: ${chatId}`);
+
+          try {
+            // Cara 1: getChatById → lebih reliable dari getContactById
+            const chat = await whatsappService.getChatById(chatId);
+            contact = await (chat as any).getContact();
+            log.bot(`info: contact resolved via getChatById | name: ${contact?.pushname}`);
+          } catch {
+            // Cara 2: fallback getContactById
+            log.warn(`info: getChatById failed, trying getContactById | chatId: ${chatId}`);
+            contact = await whatsappService.getContactById(chatId);
+          }
+
         } else {
           contact = await message.getContact();
         }
 
-        const isRegistered = await contact.isWAContact?.() ?? "-";
+        if (!contact) {
+          await message.reply(`❌ Kontak tidak ditemukan.`);
+          return;
+        }
+
+        log.bot(`info: contact found | number: ${contact.number} | pushname: ${contact.pushname}`);
+
+        // isWAContact bisa jadi property bukan method, tergantung versi
+        let isRegistered: any = "-";
+        try {
+          if (typeof contact.isWAContact === "function") {
+            isRegistered = await contact.isWAContact();
+          } else if (typeof contact.isWAContact === "boolean") {
+            isRegistered = contact.isWAContact;
+          }
+        } catch {
+          isRegistered = "-";
+        }
+
         const isBusiness = contact.isBusiness ?? false;
         const isBlocked = contact.isBlocked ?? false;
+        const about = contact.statusMute ?? null; // profile bio jika ada
 
         await message.reply(
           `👤 *Info Kontak*\n\n` +
           `📛 Nama      : ${contact.pushname || contact.name || "-"}\n` +
-          `📱 Nomor     : +${contact.number}\n` +
-          `🆔 ID        : ${contact.id._serialized}\n` +
+          `📱 Nomor     : +${contact.number || target}\n` +
+          `🆔 ID        : ${contact.id?._serialized ?? `${target}@c.us`}\n` +
           `✅ Di WA     : ${isRegistered === true ? "Ya" : isRegistered === false ? "Tidak" : "-"}\n` +
           `💼 Bisnis    : ${isBusiness ? "Ya" : "Tidak"}\n` +
           `🚫 Diblokir  : ${isBlocked ? "Ya" : "Tidak"}`
         );
+
       } catch (err) {
         log.error(`info contact failed | target: ${target} | error:`, err);
-        await message.reply(`❌ Gagal ambil info kontak: ${target ?? message.from}`);
+
+        // Fallback: tampilkan info minimal dari nomor saja
+        if (target) {
+          const number = target.replace(/\D/g, "");
+          await message.reply(
+            `👤 *Info Kontak* _(terbatas)_\n\n` +
+            `📱 Nomor : +${number}\n` +
+            `🆔 ID    : ${number}@c.us\n\n` +
+            `_⚠ Data lengkap tidak tersedia.\n` +
+            `Kontak mungkin belum pernah chat dengan bot._`
+          );
+        } else {
+          await message.reply(`Gagal ambil info kontak.`);
+        }
       }
 
       log.cmd(`info done | target: ${target ?? message.from}`);
