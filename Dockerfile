@@ -21,13 +21,16 @@ RUN apt-get update && apt-get install -y \
     libgbm1 \
     libpango-1.0-0 \
     libatk1.0-0 \
-    libatk-bridge2.0-0 \
     libdrm2 \
     ca-certificates \
     fonts-liberation \
     wget \
     unzip \
  && rm -rf /var/lib/apt/lists/*
+
+ # Tambahkan ini
+# ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Salin package.json dan bun.lockb untuk caching
 COPY package.json bun.lockb* ./
@@ -43,4 +46,4 @@ VOLUME ["/app/data"]
 
 # Jalankan Hono dengan hot reload
 # CMD ["bun", "run", "--hot", "src/index.ts"]
-CMD ["bun", "run", "src/index.ts"]
+CMD ["bun", "run", "start"]
