@@ -19,16 +19,24 @@ export class TelegramBroadcastService {
         const success: string[] = [];
         const failed: string[] = [];
 
+        // Baca file sekali sebelum loop
+        let fileBuffer: Buffer | undefined;
+        if (options?.file) {
+            fileBuffer = Buffer.from(await options.file.arrayBuffer());
+        }
+
         log.send(`broadcast start | total targets: ${targets.length}`);
 
         for (const to of targets) {
             try {
-                await telegramMessageService.send({
+                await telegramMessageService.sendWithBuffer({
                     to,
                     message,
                     caption: options?.caption,
-                    file: options?.file,
                     mediaUrl: options?.mediaUrl,
+                    fileBuffer,
+                    fileName: options?.file?.name,
+                    fileType: options?.file?.type,
                 });
                 success.push(to);
                 log.send(`broadcast ok | to: ${to}`);
