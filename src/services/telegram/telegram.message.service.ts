@@ -28,6 +28,51 @@ export class TelegramMessageService {
         log.send(`sent | to: ${to} | hasFile: ${!!file} | hasUrl: ${!!mediaUrl} | hasText: ${!!message}`);
     }
 
+    public async sendWithBuffer(params: {
+        to: string;
+        message?: string;
+        caption?: string;
+        fileBuffer?: Buffer;
+        fileName?: string;
+        fileType?: string;
+        mediaUrl?: string;
+    }): Promise<void> {
+        const { to, message, caption, fileBuffer, fileName, fileType, mediaUrl } = params;
+
+        if (fileBuffer && fileName) {
+            await this.sendFileFromBuffer(to, fileBuffer, fileName, fileType, caption);
+        } else if (mediaUrl) {
+            await this.sendUrl(to, mediaUrl, caption);
+        }
+
+        if (message) {
+            await telegramService.bot.sendMessage(to, message);
+        }
+
+        log.send(`sent | to: ${to} | hasFile: ${!!fileBuffer} | hasUrl: ${!!mediaUrl} | hasText: ${!!message}`);
+    }
+
+    private async sendFileFromBuffer(
+        to: string,
+        buffer: Buffer,
+        fileName: string,
+        fileType?: string,
+        caption?: string
+    ): Promise<void> {
+        const mimeType = fileType ?? "application/octet-stream";
+        const fileOptions = { filename: fileName, contentType: mimeType };
+
+        if (mimeType.startsWith("image/")) {
+            await telegramService.bot.sendPhoto(to, buffer, { caption }, fileOptions);
+        } else if (mimeType.startsWith("video/")) {
+            await telegramService.bot.sendVideo(to, buffer, { caption }, fileOptions);
+        } else if (mimeType.startsWith("audio/")) {
+            await telegramService.bot.sendAudio(to, buffer, { caption }, fileOptions);
+        } else {
+            await telegramService.bot.sendDocument(to, buffer, { caption }, fileOptions);
+        }
+    }
+
     private async sendFile(to: string, file: File, caption?: string): Promise<void> {
         const tmpDir = path.join(process.cwd(), "tmp");
         if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
