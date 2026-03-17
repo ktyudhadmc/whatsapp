@@ -36,19 +36,16 @@ jobs:
             cp /var/www/hono-bot-wa/.env .env
           fi
 
+      - name: Stop old container
+        run: docker compose down || true
+
       - name: Prepare volume directories
         run: |
           mkdir -p /opt/wa-auth
           mkdir -p /opt/wa-cache
-          chmod -R 775 /opt/wa-auth
-          chmod -R 775 /opt/wa-cache
-          
-      - name: Stop old container
-        run: docker compose down || true
 
       - name: Clean chromium lock
         run: |
-          mkdir -p /opt/wa-auth
           find /opt/wa-auth -name "Singleton*" -type f -delete || true
           find /opt/wa-auth -name "LOCK" -type f -delete || true
           rm -rf /tmp/puppeteer* || true
