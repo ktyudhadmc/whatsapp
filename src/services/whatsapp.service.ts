@@ -9,6 +9,17 @@ import fs from "fs";
 import * as qrcode from "qrcode-terminal";
 import { log } from "@/helpers/logger";
 
+function cleanChromiumLock() {
+  const base = "/app/.wwebjs_auth";
+
+  try {
+    fs.rmSync(`${base}/SingletonLock`, { force: true });
+    fs.rmSync(`${base}/SingletonSocket`, { force: true });
+    fs.rmSync(`${base}/SingletonCookie`, { force: true });
+    fs.rmSync(`${base}/lockfile`, { force: true });
+  } catch { }
+}
+
 export class WhatsAppService {
   private client: Client;
   private isReady: boolean = false;
@@ -25,16 +36,20 @@ export class WhatsAppService {
   }
 
   private createClient(): Client {
+    cleanChromiumLock();
+
     log.bot("creating new WhatsApp client...");
     return new Client({
-      // authStrategy: new LocalAuth({ dataPath: '/app/data' }),
-      authStrategy: new LocalAuth(),
+      authStrategy: new LocalAuth({
+        dataPath: "/app/.wwebjs_auth",
+      }),
       puppeteer: {
         headless: true,
         // MacOS
         // executablePath: "/opt/homebrew/bin/chromium",
         // Linux
         // executablePath: "/usr/bin/chromium",
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",

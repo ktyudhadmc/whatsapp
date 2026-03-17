@@ -1,0 +1,65 @@
+name: CI CD - Bot Whatsapp Telegram
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Type check
+        run: bun run typecheck || true
+
+  cd:
+    runs-on: self-hosted
+    needs: ci
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy env
+        run: |
+          if [ -f /var/www/hono-bot-wa/.env ]; then
+            cp /var/www/hono-bot-wa/.env .env
+          fi
+
+      - name: Prepare volume directories
+        run: |
+          mkdir -p /opt/wa-auth
+          mkdir -p /opt/wa-cache
+          chmod -R 775 /opt/wa-auth
+          chmod -R 775 /opt/wa-cache
+          
+      - name: Stop old container
+        run: docker compose down || true
+
+      - name: Clean chromium lock
+        run: |
+          mkdir -p /opt/wa-auth
+          find /opt/wa-auth -name "Singleton*" -type f -delete || true
+          find /opt/wa-auth -name "LOCK" -type f -delete || true
+          rm -rf /tmp/puppeteer* || true
+
+      - name: Kill old chromium
+        run: |
+          pkill chromium || true
+          pkill chrome || true
+
+      - name: Build & Run
+        run: docker compose up -d --build
+
+      - name: Cleanup unused images
+        run: docker image prune -f

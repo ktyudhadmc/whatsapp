@@ -1,6 +1,7 @@
 {
   "name": "api-bot-wa",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts"
   },

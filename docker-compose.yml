@@ -7,6 +7,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./.wwebjs_auth:/app/.wwebjs_auth
-      - ./.wwebjs_cache:/app/.wwebjs_cache
+      - /opt/wa-auth:/app/.wwebjs_auth
+      - /opt/wa-cache:/app/.wwebjs_cache
+    restart: unless-stopped 
     command: bun run start
