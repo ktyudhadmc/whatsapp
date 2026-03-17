@@ -9,6 +9,17 @@ import fs from "fs";
 import * as qrcode from "qrcode-terminal";
 import { log } from "@/helpers/logger";
 
+function cleanChromiumLock() {
+  const base = "/app/.wwebjs_auth";
+
+  try {
+    fs.rmSync(`${base}/SingletonLock`, { force: true });
+    fs.rmSync(`${base}/SingletonSocket`, { force: true });
+    fs.rmSync(`${base}/SingletonCookie`, { force: true });
+    fs.rmSync(`${base}/lockfile`, { force: true });
+  } catch { }
+}
+
 export class WhatsAppService {
   private client: Client;
   private isReady: boolean = false;
@@ -25,10 +36,13 @@ export class WhatsAppService {
   }
 
   private createClient(): Client {
+    cleanChromiumLock();
+
     log.bot("creating new WhatsApp client...");
     return new Client({
-      // authStrategy: new LocalAuth({ dataPath: '/app/data' }),
-      authStrategy: new LocalAuth(),
+      authStrategy: new LocalAuth({
+        dataPath: "/app/.wwebjs_auth",
+      }),
       puppeteer: {
         headless: true,
         // MacOS
@@ -133,29 +147,13 @@ export class WhatsAppService {
   public async sendMessage(to: string, content: any, options?: any): Promise<any> {
     if (!this.isReady) throw new Error("WhatsApp client: not ready");
     try {
-      const rawNumber = to.replace(/@c\.us$/, "").replace(/@lid$/, "");
-      const numberId = await this.client.getNumberId(rawNumber);
-
-      if (!numberId) {
-        throw new Error(`Nomor ${to} tidak terdaftar di WhatsApp`);
-      }
-
-      const resolvedId = numberId._serialized;
+      const resolvedId = await this.toWhatsAppId(to);
       log.send(`sendMessage | to: ${resolvedId}`);
       return this.client.sendMessage(resolvedId, content, options);
-
     } catch (err: any) {
-      // Fallback group
       if (to.endsWith("@g.us")) {
         return this.client.sendMessage(to, content, options);
       }
-
-      // Fallback @lid → kirim langsung, biar WA yang resolve
-      if (to.endsWith("@lid")) {
-        log.warn(`getNumberId failed for @lid, sending directly | to: ${to}`);
-        return this.client.sendMessage(to, content, options);
-      }
-
       throw err;
     }
   }
@@ -464,7 +462,11 @@ export class WhatsAppService {
 
     if (target.endsWith(extGroup)) return target;
     if (isGroup) return `${target}${extGroup}`;
-    const rawNumber = target.replace(extChat, "");
+
+    // Strip @c.us atau @lid
+    const rawNumber = target
+      .replace(/@c\.us$/, "")
+      .replace(/@lid$/, "");
 
     try {
       const numberId = await this.client.getNumberId(rawNumber);
