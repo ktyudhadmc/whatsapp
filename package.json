@@ -1,10 +1,9 @@
 {
   "name": "api-bot-wa",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target=node",
-    "start": "bun dist/index.js",
-    "dev": "bun run src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.0",
