@@ -35,8 +35,8 @@ jobs:
 
       - name: Copy env
         run: |
-          if [ -f /opt/hono-bot-wa/.env ]; then
-            cp /opt/hono-bot-wa/.env .env
+          if [ -f /var/www/hono-bot-wa/.env ]; then
+            cp /var/www/hono-bot-wa/.env .env
           fi
 
       - name: Stop old container
