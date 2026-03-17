@@ -147,13 +147,29 @@ export class WhatsAppService {
   public async sendMessage(to: string, content: any, options?: any): Promise<any> {
     if (!this.isReady) throw new Error("WhatsApp client: not ready");
     try {
-      const resolvedId = await this.toWhatsAppId(to);
+      const rawNumber = to.replace(/@c\.us$/, "").replace(/@lid$/, "");
+      const numberId = await this.client.getNumberId(rawNumber);
+
+      if (!numberId) {
+        throw new Error(`Nomor ${to} tidak terdaftar di WhatsApp`);
+      }
+
+      const resolvedId = numberId._serialized;
       log.send(`sendMessage | to: ${resolvedId}`);
       return this.client.sendMessage(resolvedId, content, options);
+
     } catch (err: any) {
+      // Fallback group
       if (to.endsWith("@g.us")) {
         return this.client.sendMessage(to, content, options);
       }
+
+      // Fallback @lid → kirim langsung, biar WA yang resolve
+      if (to.endsWith("@lid")) {
+        log.warn(`getNumberId failed for @lid, sending directly | to: ${to}`);
+        return this.client.sendMessage(to, content, options);
+      }
+
       throw err;
     }
   }
@@ -462,11 +478,7 @@ export class WhatsAppService {
 
     if (target.endsWith(extGroup)) return target;
     if (isGroup) return `${target}${extGroup}`;
-
-    // Strip @c.us atau @lid
-    const rawNumber = target
-      .replace(/@c\.us$/, "")
-      .replace(/@lid$/, "");
+    const rawNumber = target.replace(extChat, "");
 
     try {
       const numberId = await this.client.getNumberId(rawNumber);
