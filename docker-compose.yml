@@ -3,7 +3,7 @@ services:
     build: .
     container_name: ${APP_NAME:-hono-bot-wa}
     ports:
-      - "${PORT:-1997}:${PORT:-1997}"
+      - "${PORT:-2991}:${PORT:-2991}"
     env_file:
       - .env
     volumes:
