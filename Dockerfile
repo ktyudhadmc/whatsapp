@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install Chromium & dependencies untuk Puppeteer
 RUN apt-get update && apt-get install -y \
-    chromium \
+    # chromium \
     ffmpeg \
     libnss3 \
     libatk-bridge2.0-0 \
