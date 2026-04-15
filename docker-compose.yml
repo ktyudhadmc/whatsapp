@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     volumes:
-      - /opt/wa-auth:/app/.wwebjs_auth
+      - /opt/wa-auth/session:/app/.wwebjs_auth
       - /opt/wa-cache:/app/.wwebjs_cache
     shm_size: "1gb"
     init: true
