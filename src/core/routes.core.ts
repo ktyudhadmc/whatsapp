@@ -10,9 +10,10 @@ const routes: { path: string; router: Hono }[] = [
 ];
 
 export default function coreRoutes(app: Hono) {
-  const api = app;
+  const api = new Hono();
 
   routes.forEach(({ path, router }) => api.route(path, router));
 
+  app.get("/", (c) => c.text("CHATBOT RUNNING"));
   app.route("/api", api);
 }
