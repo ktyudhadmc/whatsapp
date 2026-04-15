@@ -10,7 +10,7 @@ import * as qrcode from "qrcode-terminal";
 import { log } from "@/helpers/logger";
 
 function cleanChromiumLock() {
-  const base = "/app/.wwebjs_auth";
+  const base = "/app/.wwebjs_auth/session";
 
   try {
     fs.rmSync(`${base}/SingletonLock`, { force: true });
