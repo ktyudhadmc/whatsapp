@@ -9,6 +9,8 @@ services:
     volumes:
       - /opt/wa-auth:/app/.wwebjs_auth
       - /opt/wa-cache:/app/.wwebjs_cache
+      - /usr/bin/chromium-browser:/usr/bin/chromium-browser
+      - /usr/lib/chromium-browser:/usr/lib/chromium-browser
     shm_size: "1gb"
     init: true
     restart: unless-stopped
