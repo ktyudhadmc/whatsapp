@@ -1,7 +1,7 @@
 services:
   bot:
     build: .
-    container_name: ${APP_NAME:-hono-bot-wa}
+    container_name: ${APP_NAME:-chatbot.peternak.id}
     ports:
       - "${PORT:-2991}:${PORT:-2991}"
     env_file:
@@ -11,10 +11,10 @@ services:
       - /opt/wa-cache:/app/.wwebjs_cache
     shm_size: "1gb"
     init: true
-    restart: unless-stopped 
+    restart: unless-stopped
     command: bun run start
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-1997}/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-2991}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
