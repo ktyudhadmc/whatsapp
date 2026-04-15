@@ -12,7 +12,6 @@ services:
     shm_size: "1gb"
     init: true
     restart: unless-stopped
-    command: bun run start
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:${PORT:-2991}/health"]
       interval: 30s
