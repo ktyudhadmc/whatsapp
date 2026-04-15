@@ -1,41 +1,48 @@
-# ─── Stage 1: Builder ─────────────────────────────────
-FROM oven/bun:1 AS builder
+# Gunakan image resmi Bun
+FROM oven/bun:latest
+
+# Set working directory
 WORKDIR /app
 
-# Install semua deps (termasuk devDeps untuk build)
-COPY package.json bun.lockb* ./
-RUN bun install --frozen-lockfile
-
-COPY tsconfig.json ./
-COPY src ./src
-
-RUN bun build src/index.ts \
-    --outdir dist \
-    --target bun \
-    --external puppeteer \
-    --external sharp \
-    --external whatsapp-web.js
-
-# Install ulang hanya production deps
-RUN bun install --frozen-lockfile --production
-
-# ─── Stage 2: Production ──────────────────────────────
-FROM oven/bun:1-slim AS runner
-WORKDIR /app
-
+# Install Chromium & dependencies untuk Puppeteer
 RUN apt-get update && apt-get install -y \
+    chromium \
     ffmpeg \
-    curl \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    libxss1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libatk1.0-0 \
+    libdrm2 \
+    ca-certificates \
+    fonts-liberation \
+    wget \
+    unzip \
+ && rm -rf /var/lib/apt/lists/*
 
-# ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-# ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-# ENV NODE_ENV=production
 
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules 
-COPY --from=builder /app/package.json ./
+# Salin package.json dan bun.lockb untuk caching
+COPY package.json bun.lockb* ./
 
-EXPOSE ${PORT:-2991}
-CMD ["bun", "run", "dist/index.js"]
+# Install dependencies
+RUN bun install
+
+# Salin semua source code
+COPY . .
+
+# Volume untuk session WhatsApp
+# VOLUME ["/app/data"]
+
+# Jalankan Hono dengan hot reload
+# CMD ["bun", "run", "--hot", "src/index.ts"]
+CMD ["bun", "run", "start"]
+
+
