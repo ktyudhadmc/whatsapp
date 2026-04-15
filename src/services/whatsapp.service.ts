@@ -59,7 +59,7 @@ export class WhatsAppService {
           "--no-zygote",
           "--disable-gpu",
           "--disable-extensions",
-          "--single-process",
+          // "--single-process",
         ],
       },
     });
