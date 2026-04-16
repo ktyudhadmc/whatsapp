@@ -1,12 +1,28 @@
-export function formatPhoneNumber(to: string): string {
-  let formattedNumber = to.replace(/\D/g, "");
+export function formatPhoneNumber(input: string): string {
+  let number = input.replace(/\D/g, "");
 
-  if (formattedNumber.startsWith("0")) {
-    formattedNumber = "62" + formattedNumber.slice(1);
+  if (!number) {
+    throw new Error("Invalid phone number");
   }
 
-  if (!formattedNumber.startsWith("62")) {
-    formattedNumber = "62" + formattedNumber;
+  // NORMALISASI PREFIX
+  if (number.startsWith("0")) {
+    number = "62" + number.slice(1);
+  } else if (number.startsWith("8")) {
+    number = "62" + number;
+  } else if (!number.startsWith("62")) {
+    number = "62" + number;
   }
-  return formattedNumber;
+
+  // VALIDASI PANJANG
+  if (number.length < 11 || number.length > 15) {
+    throw new Error("Invalid phone number length");
+  }
+
+  // VALIDASI FORMAT INDONESIA
+  if (!/^62[0-9]{9,13}$/.test(number)) {
+    throw new Error("Invalid Indonesian phone number format");
+  }
+
+  return number;
 }
